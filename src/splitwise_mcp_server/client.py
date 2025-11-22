@@ -257,6 +257,31 @@ class SplitwiseClient:
             logger.error(f"Network error: {str(e)}")
             raise Exception(f"Network error: Could not connect to Splitwise API. Please check your internet connection.\nDetails: {str(e)}")
     
+    def _flatten_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Flatten nested data structures for Splitwise API.
+        
+        Splitwise API expects flattened keys like users__0__user_id instead of nested arrays.
+        
+        Args:
+            data: Dictionary potentially containing nested arrays
+            
+        Returns:
+            Flattened dictionary with Splitwise-compatible keys
+        """
+        flattened = {}
+        for key, value in data.items():
+            if key == "users" and isinstance(value, list):
+                # Flatten users array
+                for i, user in enumerate(value):
+                    for user_key, user_value in user.items():
+                        flattened[f"users__{i}__{user_key}"] = str(user_value)
+            elif isinstance(value, bool):
+                # Convert booleans to lowercase strings
+                flattened[key] = str(value).lower()
+            else:
+                flattened[key] = value
+        return flattened
+    
     async def post(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make POST request to Splitwise API.
         
@@ -275,6 +300,10 @@ class SplitwiseClient:
         headers = self._get_headers()
         
         self._log_request("POST", url)
+        
+        # Flatten data for Splitwise API format
+        if data:
+            data = self._flatten_data(data)
         
         try:
             response = await self.client.post(url, headers=headers, json=data)
@@ -311,6 +340,10 @@ class SplitwiseClient:
         headers = self._get_headers()
         
         self._log_request("PUT", url)
+        
+        # Flatten data for Splitwise API format
+        if data:
+            data = self._flatten_data(data)
         
         try:
             response = await self.client.put(url, headers=headers, json=data)
