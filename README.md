@@ -121,6 +121,39 @@ SPLITWISE_API_KEY=your_api_key
 
 **Note**: OAuth 2.0 is recommended as it provides better security and more granular permissions.
 
+
+### Add to MCP Configuration
+
+Add to your MCP client configuration (e.g., Kiro's `mcp.json` or Claude Desktop's config):
+
+```json
+{
+  "mcpServers": {
+    "splitwise": {
+      "command": "python",
+      "args": ["-m", "splitwise_mcp_server"],
+      "env": {
+        "SPLITWISE_OAUTH_ACCESS_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
+
+```
+
+Or reference your `.env` file:
+
+```json
+{
+  "mcpServers": {
+    "splitwise": {
+      "command": "python",
+      "args": ["-m", "splitwise_mcp_server"]
+    }
+  }
+}
+```
+
 ### 3. Start Using
 
 The server will automatically start when your MCP client connects. Try asking your AI assistant:
