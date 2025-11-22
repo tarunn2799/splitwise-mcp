@@ -504,7 +504,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## Support
 
 For issues and questions:
-- GitHub Issues: https://github.com/yourusername/splitwise-mcp-server/issues
+- GitHub Issues: https://github.com/tarunn2799/splitwise-mcp-server/issues
 - Splitwise API Documentation: https://dev.splitwise.com/
 
 ## Acknowledgments
