@@ -1,0 +1,17 @@
+# Include documentation files
+include README.md
+include TOOLS.md
+include LICENSE
+
+# Include example configuration
+include .env.example
+
+# Include package data
+recursive-include src/splitwise_mcp_server *.py
+
+# Exclude development and cache files
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *$py.class
+global-exclude *.so
+global-exclude .DS_Store
