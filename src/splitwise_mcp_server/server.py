@@ -115,6 +115,7 @@ def create_server() -> FastMCP:
     register_resolution_tools(mcp)
     register_comment_tools(mcp)
     register_utility_tools(mcp)
+    register_arithmetic_tools(mcp)
     
     logger.info("All tools registered successfully")
     
@@ -209,6 +210,15 @@ def register_expense_tools(mcp: FastMCP) -> None:
         Creates a new expense with the specified details. The expense can be split
         equally among users or with custom split amounts. If no date is provided,
         the current date/time is used.
+        
+        IMPORTANT: For any calculations involving amounts, you MUST use the arithmetic
+        tools (add, subtract, multiply, divide, modulo) BEFORE calling this tool.
+        These tools ensure accurate calculations with proper rounding and handle
+        multiple inputs efficiently. Examples:
+        - Adding line items: add([12.50, 8.75, 15.00])
+        - Applying tax: multiply([100, 1.08])
+        - Splitting bills: divide([120, 4])
+        - Calculating tips: multiply([85, 1.18]) then divide by people
         
         Args:
             cost: Total amount as string with 2 decimal places (e.g., "25.50")
@@ -1150,3 +1160,224 @@ def register_utility_tools(mcp: FastMCP) -> None:
         except Exception as e:
             logger.error(f"Error getting currencies: {e}")
             raise
+
+
+
+# ============================================================================
+
+
+# ============================================================================
+# Arithmetic Tools
+# ============================================================================
+
+def register_arithmetic_tools(mcp: FastMCP) -> None:
+    """Register basic arithmetic calculation tools for expense management."""
+    
+    @mcp.tool()
+    def add(numbers: List[float], decimal_places: int = 2) -> Dict[str, Any]:
+        """Add multiple numbers together.
+        
+        Performs addition on a list of numbers with proper decimal rounding.
+        Useful for calculating totals, summing line items, or adding tax/tip to bills.
+        
+        Examples:
+            - Add line items: add([12.50, 8.75, 15.00]) = 36.25
+            - Add bill + tax + tip: add([85.00, 7.65, 15.30]) = 107.95
+        
+        Args:
+            numbers: List of numbers to add (minimum 1 number)
+            decimal_places: Number of decimal places to round to (default: 2)
+            
+        Returns:
+            Dictionary containing:
+            - result: Sum of all numbers
+            - result_formatted: Formatted string with specified decimal places
+            - operands: Original list of numbers
+            - operation: "addition"
+            
+        Raises:
+            ValueError: If numbers list is empty
+        """
+        if not numbers:
+            raise ValueError("numbers list cannot be empty")
+        
+        result = round(sum(numbers), decimal_places)
+        logger.info(f"Addition: {' + '.join(map(str, numbers))} = {result}")
+        
+        return {
+            "result": result,
+            "result_formatted": f"{result:.{decimal_places}f}",
+            "operands": numbers,
+            "operation": "addition"
+        }
+    
+    @mcp.tool()
+    def subtract(numbers: List[float], decimal_places: int = 2) -> Dict[str, Any]:
+        """Subtract numbers sequentially from left to right.
+        
+        Performs subtraction on a list of numbers: first - second - third - ...
+        Useful for calculating remainders, discounts, or adjustments.
+        
+        Examples:
+            - Calculate change: subtract([100.00, 87.50]) = 12.50
+            - Apply discount: subtract([50.00, 5.00]) = 45.00
+            - Multiple deductions: subtract([100.00, 10.00, 5.00, 2.50]) = 82.50
+        
+        Args:
+            numbers: List of numbers to subtract (minimum 2 numbers)
+            decimal_places: Number of decimal places to round to (default: 2)
+            
+        Returns:
+            Dictionary containing:
+            - result: Result of sequential subtraction
+            - result_formatted: Formatted string with specified decimal places
+            - operands: Original list of numbers
+            - operation: "subtraction"
+            
+        Raises:
+            ValueError: If numbers list has fewer than 2 elements
+        """
+        if len(numbers) < 2:
+            raise ValueError("subtract requires at least 2 numbers")
+        
+        result = numbers[0]
+        for num in numbers[1:]:
+            result -= num
+        result = round(result, decimal_places)
+        
+        logger.info(f"Subtraction: {' - '.join(map(str, numbers))} = {result}")
+        
+        return {
+            "result": result,
+            "result_formatted": f"{result:.{decimal_places}f}",
+            "operands": numbers,
+            "operation": "subtraction"
+        }
+    
+    @mcp.tool()
+    def multiply(numbers: List[float], decimal_places: int = 2) -> Dict[str, Any]:
+        """Multiply multiple numbers together.
+        
+        Performs multiplication on a list of numbers with proper decimal rounding.
+        Useful for calculating totals with quantities, applying rates, or scaling amounts.
+        
+        Examples:
+            - Calculate item total: multiply([12.50, 3]) = 37.50 (price × quantity)
+            - Apply tax rate: multiply([100.00, 1.08]) = 108.00 (amount × 1.08 for 8% tax)
+            - Multiple factors: multiply([10.00, 1.08, 1.15]) = 12.42 (tax + tip)
+        
+        Args:
+            numbers: List of numbers to multiply (minimum 2 numbers)
+            decimal_places: Number of decimal places to round to (default: 2)
+            
+        Returns:
+            Dictionary containing:
+            - result: Product of all numbers
+            - result_formatted: Formatted string with specified decimal places
+            - operands: Original list of numbers
+            - operation: "multiplication"
+            
+        Raises:
+            ValueError: If numbers list has fewer than 2 elements
+        """
+        if len(numbers) < 2:
+            raise ValueError("multiply requires at least 2 numbers")
+        
+        result = numbers[0]
+        for num in numbers[1:]:
+            result *= num
+        result = round(result, decimal_places)
+        
+        logger.info(f"Multiplication: {' × '.join(map(str, numbers))} = {result}")
+        
+        return {
+            "result": result,
+            "result_formatted": f"{result:.{decimal_places}f}",
+            "operands": numbers,
+            "operation": "multiplication"
+        }
+    
+    @mcp.tool()
+    def divide(numbers: List[float], decimal_places: int = 2) -> Dict[str, Any]:
+        """Divide numbers sequentially from left to right.
+        
+        Performs division on a list of numbers: first / second / third / ...
+        Useful for splitting amounts, calculating per-person costs, or finding rates.
+        
+        Examples:
+            - Split bill: divide([120.00, 4]) = 30.00 (total / people)
+            - Calculate unit price: divide([45.00, 3]) = 15.00 (total / quantity)
+            - Multiple divisions: divide([100.00, 2, 5]) = 10.00
+        
+        Args:
+            numbers: List of numbers to divide (minimum 2 numbers)
+            decimal_places: Number of decimal places to round to (default: 2)
+            
+        Returns:
+            Dictionary containing:
+            - result: Result of sequential division
+            - result_formatted: Formatted string with specified decimal places
+            - operands: Original list of numbers
+            - operation: "division"
+            
+        Raises:
+            ValueError: If numbers list has fewer than 2 elements
+            ValueError: If any divisor (after the first number) is zero
+        """
+        if len(numbers) < 2:
+            raise ValueError("divide requires at least 2 numbers")
+        
+        result = numbers[0]
+        for i, num in enumerate(numbers[1:], start=1):
+            if num == 0:
+                raise ValueError(f"Cannot divide by zero (divisor at position {i})")
+            result /= num
+        result = round(result, decimal_places)
+        
+        logger.info(f"Division: {' ÷ '.join(map(str, numbers))} = {result}")
+        
+        return {
+            "result": result,
+            "result_formatted": f"{result:.{decimal_places}f}",
+            "operands": numbers,
+            "operation": "division"
+        }
+    
+    @mcp.tool()
+    def modulo(a: float, b: float, decimal_places: int = 2) -> Dict[str, Any]:
+        """Calculate the remainder of division (modulo operation).
+        
+        Calculates a % b (the remainder when a is divided by b).
+        Useful for checking divisibility or calculating remainders in splits.
+        
+        Examples:
+            - Check remainder: modulo(100.00, 3) = 1.00
+            - Verify even split: modulo(120.00, 4) = 0.00 (divides evenly)
+        
+        Args:
+            a: Dividend (number to be divided)
+            b: Divisor (number to divide by)
+            decimal_places: Number of decimal places to round to (default: 2)
+            
+        Returns:
+            Dictionary containing:
+            - result: Remainder of a % b
+            - result_formatted: Formatted string with specified decimal places
+            - operands: [a, b]
+            - operation: "modulo"
+            
+        Raises:
+            ValueError: If b is zero
+        """
+        if b == 0:
+            raise ValueError("Cannot calculate modulo with zero divisor")
+        
+        result = round(a % b, decimal_places)
+        logger.info(f"Modulo: {a} % {b} = {result}")
+        
+        return {
+            "result": result,
+            "result_formatted": f"{result:.{decimal_places}f}",
+            "operands": [a, b],
+            "operation": "modulo"
+        }

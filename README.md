@@ -5,6 +5,7 @@ A Model Context Protocol (MCP) server that provides AI agents with comprehensive
 ## Features
 
 - **Complete Splitwise API Coverage**: Manage expenses, groups, friends, and comments
+- **Basic Arithmetic Tools**: Simple +, -, *, /, % operators for reliable expense calculations
 - **Natural Language Resolution**: Fuzzy matching for friends, groups, and categories using intelligent algorithms
 - **Dual Authentication**: Support for both OAuth 2.0 and API key authentication
 - **Smart Caching**: Optimized performance with intelligent data caching (24-hour TTL for static data)
