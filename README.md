@@ -25,7 +25,7 @@ pip install splitwise-mcp-server
 ### From Source
 
 ```bash
-git clone https://github.com/yourusername/splitwise-mcp-server
+git clone https://github.com/tarunn2799/splitwise-mcp-server
 cd splitwise-mcp-server
 pip install -e .
 ```
@@ -38,57 +38,7 @@ pip install -e .
 
 ## Quick Start
 
-### 1. Configure Authentication
-
-Copy `.env.example` to `.env` and add your Splitwise credentials:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your credentials (see Authentication section below for detailed setup).
-
-### 2. Add to MCP Configuration
-
-Add to your MCP client configuration (e.g., Kiro's `mcp.json` or Claude Desktop's config):
-
-```json
-{
-  "mcpServers": {
-    "splitwise": {
-      "command": "python",
-      "args": ["-m", "splitwise_mcp_server"],
-      "env": {
-        "SPLITWISE_OAUTH_ACCESS_TOKEN": "your_token_here"
-      }
-    }
-  }
-}
-
-```
-
-Or reference your `.env` file:
-
-```json
-{
-  "mcpServers": {
-    "splitwise": {
-      "command": "python",
-      "args": ["-m", "splitwise_mcp_server"]
-    }
-  }
-}
-```
-
-### 3. Start Using
-
-The server will automatically start when your MCP client connects. Try asking your AI assistant:
-
-- "What's my current balance on Splitwise?"
-- "Create a $50 dinner expense split with John"
-- "Show me my expenses from last month"
-
-## Authentication
+### 1. Configure Authentication 
 
 ### OAuth 2.0 (Recommended)
 
@@ -170,6 +120,16 @@ SPLITWISE_API_KEY=your_api_key
 ```
 
 **Note**: OAuth 2.0 is recommended as it provides better security and more granular permissions.
+
+### 3. Start Using
+
+The server will automatically start when your MCP client connects. Try asking your AI assistant:
+
+- "What's my current balance on Splitwise?"
+- "Create a $50 dinner expense split with John"
+- "Show me my expenses from last month"
+
+
 
 ## Usage Examples
 
