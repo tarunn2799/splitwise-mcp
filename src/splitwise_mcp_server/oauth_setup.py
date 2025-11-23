@@ -109,7 +109,7 @@ def get_authorization_code(auth_url: str) -> str:
     
     print()
     print("After authorizing, you'll be redirected to a URL like:")
-    print("http://localhost:8000/callback?code=AUTHORIZATION_CODE")
+    print("http://localhost:8000/callback?code=AUTHORIZATION_CODE&state=")
     print()
     print("Copy the ENTIRE redirect URL or just the 'code' parameter value.")
     print()
