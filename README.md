@@ -108,7 +108,36 @@ OAuth 2.0 provides secure, token-based authentication with fine-grained permissi
 
    Test your setup by running:
    ```bash
-   python -c "from splitwise_mcp_server.client import SplitwiseClient; from splitwise_mcp_server.config import SplitwiseConfig; import asyncio; asyncio.run(SplitwiseClient(SplitwiseConfig.from_env()).get_current_user())"
+   python << 'EOF'
+   import asyncio
+   from splitwise_mcp_server.config import SplitwiseConfig
+   from splitwise_mcp_server.auth import OAuth2Handler
+   from splitwise_mcp_server.client import SplitwiseClient
+
+   async def test():
+       config = SplitwiseConfig.from_env()
+       auth = OAuth2Handler(
+           consumer_key=config.oauth_consumer_key,
+           consumer_secret=config.oauth_consumer_secret,
+           access_token=config.oauth_access_token
+       )
+       
+       async with SplitwiseClient(auth) as client:
+           response = await client.get_current_user()
+           user = response['user']
+           print(f"✓ Connected as: {user['first_name']} {user['last_name']}")
+           print(f"✓ Email: {user['email']}")
+           print(f"✓ User ID: {user['id']}")
+
+   asyncio.run(test())
+   EOF
+   ```
+
+   Expected output:
+   ```
+   ✓ Connected as: Your Name
+   ✓ Email: your.email@example.com
+   ✓ User ID: 12345678
    ```
 
 ### API Key (Alternative)
