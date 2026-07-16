@@ -2,18 +2,6 @@
 
 This document provides comprehensive documentation for all MCP tools provided by the Splitwise MCP Server.
 
-## Important: Using Arithmetic Tools
-
-**When performing any expense calculations, you MUST use the [Arithmetic Tools](#arithmetic-tools) to ensure accuracy:**
-
-- **Adding amounts**: Use `add` to sum line items, calculate totals with tax/tip
-- **Subtracting amounts**: Use `subtract` for discounts, change, or adjustments
-- **Multiplying amounts**: Use `multiply` for quantities, tax rates, or scaling
-- **Dividing amounts**: Use `divide` to split bills, calculate per-person costs
-- **Checking remainders**: Use `modulo` to verify even splits or calculate remainders
-
-These tools handle proper rounding and decimal precision, preventing floating-point errors that could lead to incorrect expense amounts. Always verify the splits with the total amount to see if it adds up. 
-
 ## Table of Contents
 
 - [User Tools](#user-tools)
@@ -22,8 +10,8 @@ These tools handle proper rounding and decimal precision, preventing floating-po
 - [Friend Tools](#friend-tools)
 - [Resolution Tools](#resolution-tools)
 - [Comment Tools](#comment-tools)
+- [Notification Tools](#notification-tools)
 - [Utility Tools](#utility-tools)
-- [Arithmetic Tools](#arithmetic-tools)
 - [Error Codes](#error-codes)
 - [Common Patterns](#common-patterns)
 
@@ -105,13 +93,46 @@ Get information about a specific user by ID.
 
 ---
 
+### update-user
+
+Update a user's profile information.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `user_id` | integer | Yes | The ID of the user to update |
+| `first_name` | string | No | New first name |
+| `last_name` | string | No | New last name |
+| `email` | string | No | New email address |
+
+**Returns:**
+```json
+{
+  "user": {
+    "id": 67890,
+    "first_name": "Jane",
+    "last_name": "Updated",
+    "email": "jane.new@example.com"
+  }
+}
+```
+
+**Example Usage:**
+```
+"Update user 518014's last name to Greeff"
+```
+
+**Errors:**
+- `404`: User not found
+- `401`: Authentication failed
+
+---
+
 ## Expense Tools
 
 ### create-expense
 
 Create a new expense in Splitwise.
-
-**IMPORTANT:** When creating expenses that involve calculations (tips, splits, percentages, currency conversion), you should use the [Arithmetic Tools](#arithmetic-tools) first to ensure accurate calculations with proper rounding, then use the calculated values in this tool.
 
 **Parameters:**
 | Name | Type | Required | Default | Description |
@@ -122,8 +143,11 @@ Create a new expense in Splitwise.
 | `currency_code` | string | No | "USD" | Three-letter currency code |
 | `date` | string | No | current | ISO 8601 datetime string |
 | `category_id` | integer | No | null | Category ID from get-categories |
+| `details` | string | No | null | Additional notes or details |
+| `repeat_interval` | string | No | null | "weekly", "fortnightly", "monthly", or "yearly" |
 | `users` | array | No | null | List of user split information |
 | `split_equally` | boolean | No | true | Whether to split equally among users |
+| `payment` | boolean | No | false | Set to true for cash settlement/payment records |
 
 **User Split Format:**
 ```json
@@ -327,6 +351,32 @@ Delete an expense permanently.
 
 ---
 
+### restore-expense
+
+Restore a previously deleted expense.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `expense_id` | integer | Yes | The ID of the expense to restore |
+
+**Returns:**
+```json
+{
+  "success": true
+}
+```
+
+**Example Usage:**
+```
+"Restore expense 987654"
+```
+
+**Errors:**
+- `404`: Expense not found
+
+---
+
 ## Group Tools
 
 ### get-groups
@@ -471,6 +521,32 @@ Delete a group permanently.
 
 ---
 
+### restore-group
+
+Restore a previously deleted group.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `group_id` | integer | Yes | The ID of the group to restore |
+
+**Returns:**
+```json
+{
+  "success": true
+}
+```
+
+**Example Usage:**
+```
+"Restore my deleted Roommates group"
+```
+
+**Errors:**
+- `404`: Group not found
+
+---
+
 ### add-user-to-group
 
 Add a user to a group.
@@ -601,6 +677,66 @@ Get detailed information about a specific friend.
 **Example Usage:**
 ```
 "Show me details for my friend Jane"
+```
+
+**Errors:**
+- `404`: Friend not found
+
+---
+
+### create-friend
+
+Add a new friend by email address.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `user_email` | string | Yes | - | Email address of the friend |
+| `user_first_name` | string | No | "" | First name of the friend |
+| `user_last_name` | string | No | "" | Last name of the friend |
+
+**Returns:**
+```json
+{
+  "friend": {
+    "id": 67890,
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "email": "jane@example.com"
+  }
+}
+```
+
+**Example Usage:**
+```
+"Add jane@example.com as a friend"
+```
+
+**Errors:**
+- `400`: Invalid email
+- `404`: User not found on Splitwise
+
+---
+
+### delete-friend
+
+Remove a friendship by friend ID.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `friend_id` | integer | Yes | The ID of the friend to remove |
+
+**Returns:**
+```json
+{
+  "success": true
+}
+```
+
+**Example Usage:**
+```
+"Remove friend 67890"
 ```
 
 **Errors:**
@@ -810,7 +946,70 @@ Delete a comment permanently.
 
 ---
 
+## Notification Tools
+
+### get-notifications
+
+Get recent notifications for the current user.
+
+**Parameters:** None
+
+**Returns:**
+```json
+{
+  "notifications": [
+    {
+      "id": 123,
+      "type": "expense",
+      "content": "John added 'Dinner' for $45.00",
+      "created_at": "2024-01-15T19:30:00Z"
+    }
+  ]
+}
+```
+
+**Example Usage:**
+```
+"Show me my recent Splitwise notifications"
+```
+
+---
+
 ## Utility Tools
+
+### parse-sentence
+
+Parse natural language into an expense. Use `autosave=True` to create immediately, or `False` (default) to preview first.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `input_str` | string | Yes | - | Natural language (e.g., "I paid R25 for pizza with John") |
+| `group_id` | integer | No | 0 | Group ID (0 for non-group) |
+| `friend_id` | integer | No | 0 | Friend user ID (0 for no friend) |
+| `autosave` | boolean | No | false | Auto-create expense (default: preview only) |
+
+**Returns:**
+```json
+{
+  "expense": {
+    "description": "pizza",
+    "cost": "25.00",
+    "currency_code": "ZAR",
+    "users": [...]
+  }
+}
+```
+
+**Example Usage:**
+```
+"Parse 'I paid R200 for dinner with Elsje and Francois' in group 100052914"
+```
+
+**Errors:**
+- `400`: Input cannot be parsed
+
+---
 
 ### get-categories
 
@@ -886,94 +1085,6 @@ Get all supported currency codes.
 ```
 
 **Note:** This data is cached for 24 hours to minimize API calls.
-
----
-
-## Arithmetic Tools
-
-Basic arithmetic operations for reliable expense calculations. These tools handle multiple inputs and proper decimal rounding.
-
-### add
-
-Add multiple numbers together.
-
-**Parameters:**
-- `numbers`: array[float] - List of numbers to add (minimum 1)
-- `decimal_places`: integer - Decimal places to round to (default: 2)
-
-**Returns:** `{ result, result_formatted, operands, operation }`
-
-**Examples:**
-- Add line items: `add([12.50, 8.75, 15.00])` → 36.25
-- Total with tax/tip: `add([85.00, 7.65, 15.30])` → 107.95
-
----
-
-### subtract
-
-Subtract numbers sequentially (left to right).
-
-**Parameters:**
-- `numbers`: array[float] - List of numbers to subtract (minimum 2)
-- `decimal_places`: integer - Decimal places to round to (default: 2)
-
-**Returns:** `{ result, result_formatted, operands, operation }`
-
-**Examples:**
-- Calculate change: `subtract([100.00, 87.50])` → 12.50
-- Apply discount: `subtract([50.00, 5.00])` → 45.00
-- Multiple deductions: `subtract([100.00, 10.00, 5.00, 2.50])` → 82.50
-
----
-
-### multiply
-
-Multiply multiple numbers together.
-
-**Parameters:**
-- `numbers`: array[float] - List of numbers to multiply (minimum 2)
-- `decimal_places`: integer - Decimal places to round to (default: 2)
-
-**Returns:** `{ result, result_formatted, operands, operation }`
-
-**Examples:**
-- Item total: `multiply([12.50, 3])` → 37.50 (price × quantity)
-- Apply tax: `multiply([100.00, 1.08])` → 108.00 (8% tax)
-- Tax + tip: `multiply([10.00, 1.08, 1.15])` → 12.42
-
----
-
-### divide
-
-Divide numbers sequentially (left to right).
-
-**Parameters:**
-- `numbers`: array[float] - List of numbers to divide (minimum 2)
-- `decimal_places`: integer - Decimal places to round to (default: 2)
-
-**Returns:** `{ result, result_formatted, operands, operation }`
-
-**Examples:**
-- Split bill: `divide([120.00, 4])` → 30.00 (total / people)
-- Unit price: `divide([45.00, 3])` → 15.00 (total / quantity)
-- Multiple divisions: `divide([100.00, 2, 5])` → 10.00
-
----
-
-### modulo
-
-Calculate remainder of division.
-
-**Parameters:**
-- `a`: float - Dividend
-- `b`: float - Divisor
-- `decimal_places`: integer - Decimal places to round to (default: 2)
-
-**Returns:** `{ result, result_formatted, operands, operation }`
-
-**Examples:**
-- Check remainder: `modulo(100.00, 3)` → 1.00
-- Verify even split: `modulo(120.00, 4)` → 0.00 (divides evenly)
 
 ---
 
@@ -1131,29 +1242,15 @@ All tools may return the following error types:
    → Returns matches for "Roommates" with high score
 ```
 
-### Using Arithmetic Tools for Expense Calculations
+### Natural Language Expense Creation
 
 ```
-1. "Split $120 among 4 people"
-   → Uses divide(120, 4) to get 30 per person
-   → Uses create-expense with the calculated amounts
-
-2. "Calculate 15% tip on $85"
-   → Uses multiply(85, 0.15) to get tip amount
-   → Uses add(85, tip_amount) to get total
-   → Uses create-expense with the total
-
-3. "Add up expenses: $45.50, $32, $18.75"
-   → Uses add(45.50, 32) then add(result, 18.75)
-   → Uses create-expense with the total
-
-4. "What's each person's share if total is $150 and we split 60/40?"
-   → Uses multiply(150, 0.6) for first person
-   → Uses multiply(150, 0.4) for second person
-   → Uses create-expense with custom splits
+1. "I paid R25 for pizza with John and Sarah"
+   → Uses parse-sentence to extract expense details
+   → Review the preview, then set autosave=True to create
 ```
 
----
+### Managing Groups
 
 ## Best Practices
 

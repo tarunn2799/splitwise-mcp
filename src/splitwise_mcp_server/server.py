@@ -152,6 +152,29 @@ def register_user_tools(mcp: FastMCP) -> None:
         except Exception as e:
             logger.error(f"Error getting user {user_id}: {e}")
             raise
+    
+    @mcp.tool()
+    async def update_user(
+        user_id: int,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+        email: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Update a user's profile (first_name, last_name, email)."""
+        try:
+            user_data = {}
+            if first_name is not None:
+                user_data["first_name"] = first_name
+            if last_name is not None:
+                user_data["last_name"] = last_name
+            if email is not None:
+                user_data["email"] = email
+            result = await client.update_user(user_id, user_data)
+            logger.info(f"Updated user {user_id}")
+            return result
+        except Exception as e:
+            logger.error(f"Error updating user {user_id}: {e}")
+            raise
 
 
 # ============================================================================
@@ -506,6 +529,18 @@ def register_group_tools(mcp: FastMCP) -> None:
             raise
     
     @mcp.tool()
+    async def restore_group(group_id: int) -> Dict[str, Any]:
+        """Restore a previously deleted group."""
+        try:
+            result = await client.restore_group(group_id)
+            logger.info(f"Restored group {group_id}")
+            resolver.clear_cache()
+            return result
+        except Exception as e:
+            logger.error(f"Error restoring group {group_id}: {e}")
+            raise
+    
+    @mcp.tool()
     async def add_user_to_group(
         group_id: int,
         user_id: Optional[int] = None,
@@ -801,6 +836,26 @@ def register_notification_tools(mcp: FastMCP) -> None:
 
 def register_utility_tools(mcp: FastMCP) -> None:
     """Register utility MCP tools."""
+    
+    @mcp.tool()
+    async def parse_sentence(
+        input_str: str,
+        group_id: int = 0,
+        friend_id: int = 0,
+        autosave: bool = False,
+    ) -> Dict[str, Any]:
+        """Parse natural language into an expense (e.g. "I paid R25 for pizza with John").
+        Set autosave=True to create the expense immediately, or False to preview first."""
+        try:
+            validate_required(input_str, "input_str")
+            result = await client.parse_sentence(input_str, group_id, friend_id, autosave)
+            logger.info(f"Parsed sentence: {input_str[:50]}...")
+            return result
+        except (ValidationError, RateLimitError):
+            raise
+        except Exception as e:
+            logger.error(f"Error parsing sentence: {e}")
+            raise
     
     @mcp.tool()
     async def get_categories() -> Dict[str, Any]:

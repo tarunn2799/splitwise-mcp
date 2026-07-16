@@ -374,6 +374,25 @@ class SplitwiseClient:
         """
         return await self.get(f"/get_user/{user_id}")
 
+    async def update_user(self, user_id: int, user_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Update a user's profile information.
+
+        Args:
+            user_id: ID of the user to update
+            user_data: Dictionary containing fields to update:
+                - first_name: New first name (optional)
+                - last_name: New last name (optional)
+                - email: New email address (optional)
+                - password: New password (optional)
+
+        Returns:
+            Dictionary containing updated user information
+
+        Raises:
+            Exception: If request fails or user not found
+        """
+        return await self.post(f"/update_user/{user_id}", data=user_data)
+
     # Expense endpoints
     
     async def get_expenses(
@@ -575,6 +594,20 @@ class SplitwiseClient:
         """
         return await self.post(f"/delete_group/{group_id}")
     
+    async def restore_group(self, group_id: int) -> Dict[str, Any]:
+        """Restore a deleted group.
+        
+        Args:
+            group_id: ID of the group to restore
+            
+        Returns:
+            Dictionary with success status
+            
+        Raises:
+            Exception: If request fails or group not found
+        """
+        return await self.post(f"/restore_group/{group_id}")
+    
     async def add_user_to_group(self, group_id: int, user_data: Dict[str, Any]) -> Dict[str, Any]:
         """Add a user to a group.
         
@@ -728,6 +761,29 @@ class SplitwiseClient:
 
     # Utility endpoints
     
+    async def parse_sentence(self, input_str: str, group_id: int = 0, friend_id: int = 0, autosave: bool = False) -> Dict[str, Any]:
+        """Parse a natural language sentence to create an expense.
+
+        Args:
+            input_str: Natural language description (e.g., "I paid $25 for pizza with John")
+            group_id: Group ID to associate expense with (optional, 0 for non-group)
+            friend_id: Friend user ID (optional, 0 for no friend)
+            autosave: Whether to auto-save the parsed expense (default: False for preview)
+
+        Returns:
+            Dictionary containing parsed expense information
+
+        Raises:
+            Exception: If request fails
+        """
+        data = {
+            "input": input_str,
+            "group_id": group_id,
+            "friend_id": friend_id,
+            "autosave": autosave,
+        }
+        return await self.post("/parse_sentence", data=data)
+
     async def get_categories(self) -> Dict[str, Any]:
         """Get all supported expense categories and subcategories.
         
