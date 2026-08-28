@@ -78,11 +78,12 @@ See [TOOLS.md](TOOLS.md) for detailed documentation.
 - `get-user`: Get information about a specific user
 
 ### Expense Tools
-- `create-expense`: Create a new expense with splits
+- `create-expense`: Create a new expense with splits, including cash payments (`payment=True`)
 - `get-expenses`: List expenses with optional filters
 - `get-expense`: Get detailed expense information
 - `update-expense`: Update an existing expense
 - `delete-expense`: Delete an expense
+- `restore-expense`: Restore a deleted expense
 
 ### Group Tools
 - `get-groups`: List all groups

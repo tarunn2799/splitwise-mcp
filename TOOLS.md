@@ -124,6 +124,7 @@ Create a new expense in Splitwise.
 | `category_id` | integer | No | null | Category ID from get-categories |
 | `users` | array | No | null | List of user split information |
 | `split_equally` | boolean | No | true | Whether to split equally among users |
+| `payment` | boolean | No | false | Set to true for cash settlement/payment records |
 
 **User Split Format:**
 ```json
@@ -324,6 +325,32 @@ Delete an expense permanently.
 **Errors:**
 - `404`: Expense not found
 - `403`: Insufficient permissions
+
+---
+
+### restore-expense
+
+Restore a previously deleted expense.
+
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `expense_id` | integer | Yes | The ID of the expense to restore |
+
+**Returns:**
+```json
+{
+  "success": true
+}
+```
+
+**Example Usage:**
+```
+"Restore expense 987654"
+```
+
+**Errors:**
+- `404`: Expense not found
 
 ---
 

@@ -172,12 +172,14 @@ def register_expense_tools(mcp: FastMCP) -> None:
         details: Optional[str] = None,
         repeat_interval: Optional[str] = None,
         users: Optional[List[Dict[str, Any]]] = None,
-        split_equally: bool = True
+        split_equally: bool = True,
+        payment: bool = False,
     ) -> Dict[str, Any]:
         """Create a new expense. Cost is a string with 2 decimals (e.g. "25.50").
         Splits equally by default; provide users list with paid_share/owed_share for custom splits.
         Each user needs user_id or (email + first_name + last_name).
         Set repeat_interval to "weekly", "fortnightly", "monthly", or "yearly" for recurring expenses.
+        Set payment=True to create a cash settlement/payment record between users.
         """
         try:
             validate_required(cost, "cost")
@@ -229,6 +231,9 @@ def register_expense_tools(mcp: FastMCP) -> None:
                 expense_data["details"] = details
             if repeat_interval is not None:
                 expense_data["repeat_interval"] = repeat_interval
+            if payment:
+                expense_data["payment"] = True
+                expense_data["creation_method"] = "payment"
 
             result = await client.create_expense(expense_data)
             logger.info(f"Created expense: {description} (${cost})")
